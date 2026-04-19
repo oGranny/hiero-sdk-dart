@@ -46,7 +46,7 @@ SOURCES = [
     }
 ]
 
-OUTPUT_DIR="lib/src/generated"
+OUTPUT_DIR="lib/src/hapi"
 CACHE_DIR=".protos"
 
 # Map common broken imports in mirror/platform proto
