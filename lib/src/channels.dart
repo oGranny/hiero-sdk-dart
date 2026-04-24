@@ -1,3 +1,5 @@
+import 'package:grpc/grpc.dart';
+
 import 'hapi/services/file_service.pbgrpc.dart';
 import 'hapi/services/address_book_service.pbgrpc.dart';
 import 'hapi/services/consensus_service.pbgrpc.dart';
@@ -9,8 +11,8 @@ import 'hapi/services/smart_contract_service.pbgrpc.dart';
 import 'hapi/services/token_service.pbgrpc.dart';
 import 'hapi/services/util_service.pbgrpc.dart';
 
-class _Channel {
-  final dynamic channel;
+class Channel {
+  final ClientChannel channel;
 
   CryptoServiceClient? _crypto;
   FileServiceClient? _file;
@@ -23,7 +25,7 @@ class _Channel {
   UtilServiceClient? _util;
   AddressBookServiceClient? _addressBook;
 
-  _Channel(this.channel);
+  Channel(this.channel);
 
   CryptoServiceClient? get crypto =>
       channel == null ? null : _crypto ??= CryptoServiceClient(channel);
