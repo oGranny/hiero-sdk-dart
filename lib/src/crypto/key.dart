@@ -23,9 +23,10 @@ abstract class Key {
     return Key.fromProtoKey(key);
   }
 
-  Uint8List toBytes() {
-    return toProtoKey().writeToBuffer();
+  Future<Uint8List> toBytes() async {
+    basic_types.Key protoKey = await toProtoKey();
+    return protoKey.writeToBuffer();
   }
 
-  basic_types.Key toProtoKey();
+  Future<basic_types.Key> toProtoKey();
 }

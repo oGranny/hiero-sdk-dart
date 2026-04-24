@@ -16,26 +16,21 @@ typedef NodeDict = ({
 });
 
 class NodeAddress {
-  final String? _publicKey;
-  final AccountId? _accountId;
-  final int _nodeId;
-  final Uint8List? _certHash;
-  final List<Endpoint> _addresses;
-  final String? _description;
+  final String? publicKey;
+  final AccountId? accountId;
+  final int nodeId;
+  final Uint8List? certHash;
+  final List<Endpoint> addresses;
+  final String? description;
 
   NodeAddress({
-    required String? publicKey,
-    required AccountId? accountId,
-    required int nodeId,
-    required Uint8List? certHash,
-    required List<Endpoint> addresses,
-    required String? description,
-  }) : _publicKey = publicKey,
-       _accountId = accountId,
-       _nodeId = nodeId,
-       _certHash = certHash,
-       _addresses = addresses,
-       _description = description;
+    required this.publicKey,
+    required this.accountId,
+    required this.nodeId,
+    required this.certHash,
+    required this.addresses,
+    required this.description,
+  });
 
   factory NodeAddress.fromProto(basic_types.NodeAddress nodeAddressProto) {
     List<Endpoint> addresses = <Endpoint>[];
@@ -57,17 +52,17 @@ class NodeAddress {
 
   basic_types.NodeAddress toProto() {
     basic_types.NodeAddress nodeAddressProto = basic_types.NodeAddress(
-      rSAPubKey: _publicKey,
-      nodeId: fixnum.Int64(_nodeId),
-      nodeCertHash: _certHash,
-      description: _description,
+      rSAPubKey: publicKey,
+      nodeId: fixnum.Int64(nodeId),
+      nodeCertHash: certHash,
+      description: description,
     );
 
-    if (_accountId != null) {
-      nodeAddressProto.nodeAccountId = _accountId.toProto();
+    if (accountId != null) {
+      nodeAddressProto.nodeAccountId = accountId!.toProto();
     }
 
-    for (final endpoint in _addresses) {
+    for (final endpoint in addresses) {
       nodeAddressProto.serviceEndpoint.add(endpoint.toProto());
     }
     return nodeAddressProto;
@@ -75,19 +70,19 @@ class NodeAddress {
 
   @override
   String toString() {
-    final addressesStr = _addresses.map((address) => address.toString()).join();
+    final addressesStr = addresses.map((address) => address.toString()).join();
     final certHashStr =
-        _certHash
+        certHash
             ?.map((byte) => byte.toRadixString(16).padLeft(2, '0'))
             .join() ??
         '';
-    final nodeIdStr = _nodeId.toString();
-    final accountIdStr = _accountId?.toString() ?? '';
+    final nodeIdStr = nodeId.toString();
+    final accountIdStr = accountId?.toString() ?? '';
 
     return 'NodeAccountId: $accountIdStr $addressesStr\n'
         'CertHash: $certHashStr\n'
         'NodeId: $nodeIdStr\n'
-        'PubKey: ${_publicKey ?? ''}';
+        'PubKey: ${publicKey ?? ''}';
   }
 
   factory NodeAddress.fromDict(NodeDict node) {

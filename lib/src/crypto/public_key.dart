@@ -91,7 +91,7 @@ class PublicKey extends Key {
   }
 
   @override
-  basic_types.Key toProtoKey() {
+  Future<basic_types.Key> toProtoKey() async {
     return toProto();
   }
 
