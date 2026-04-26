@@ -10,3 +10,5 @@ pubspec.lock
 **/generated/
 .protos/
 **/hapi/
+
+**/.env

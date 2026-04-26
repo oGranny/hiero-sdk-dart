@@ -78,6 +78,34 @@ class Endpoint {
     );
   }
 
+  factory Endpoint.fromJson(Map<String, dynamic> json) {
+    final String ipAddressV4 =
+        (json['ip_address_v4'] ?? json['ipAddressV4'] ?? '').toString();
+    final String domainName = (json['domain_name'] ?? json['domainName'] ?? '')
+        .toString();
+
+    final dynamic rawPort = json['port'];
+    final int port = rawPort is int
+        ? rawPort
+        : int.tryParse(rawPort?.toString() ?? '') ?? 0;
+
+    if (port <= 0 || (ipAddressV4.isEmpty && domainName.isEmpty)) {
+      throw ArgumentError(
+        "JSON data must contain at least one address field and a valid 'port'.",
+      );
+    }
+
+    final String resolvedAddress = ipAddressV4.isNotEmpty
+        ? ipAddressV4
+        : domainName;
+
+    return Endpoint(
+      address: Uint8List.fromList(utf8.encode(resolvedAddress)),
+      port: port,
+      domainName: domainName,
+    );
+  }
+
   @override
   String toString() {
     return "${utf8.decode(_address, allowMalformed: true)}:{$_port}";

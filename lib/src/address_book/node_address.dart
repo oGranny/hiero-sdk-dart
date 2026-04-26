@@ -107,4 +107,62 @@ class NodeAddress {
       description: description,
     );
   }
+
+  factory NodeAddress.fromJson(Map<String, dynamic> json) {
+    final String publicKey = (json['public_key'] ?? json['publicKey'] ?? '')
+        .toString();
+    final String nodeAccountId =
+        (json['node_account_id'] ?? json['nodeAccountId'] ?? '').toString();
+
+    final dynamic rawNodeId = json['node_id'] ?? json['nodeId'];
+    final int nodeId = rawNodeId is int
+        ? rawNodeId
+        : int.tryParse(rawNodeId?.toString() ?? '') ?? 0;
+
+    final String certHashHex =
+        (json['node_cert_hash'] ?? json['nodeCertHash'] ?? '').toString();
+    final String description = (json['description'] ?? json['memo'] ?? '')
+        .toString();
+
+    final dynamic rawServiceEndpoints =
+        json['service_endpoints'] ?? json['serviceEndpoints'] ?? [];
+    final List<Endpoint> endpoints = [];
+    if (rawServiceEndpoints is List) {
+      for (final dynamic endpointJson in rawServiceEndpoints) {
+        if (endpointJson is Map<String, dynamic>) {
+          endpoints.add(Endpoint.fromJson(endpointJson));
+        }
+      }
+    }
+
+    if (nodeAccountId.isEmpty || nodeId < 0 || endpoints.isEmpty) {
+      throw ArgumentError('Invalid node JSON payload');
+    }
+
+    return NodeAddress(
+      publicKey: publicKey,
+      accountId: AccountId.fromString(nodeAccountId),
+      nodeId: nodeId,
+      certHash: _parseHex(certHashHex),
+      addresses: endpoints,
+      description: description,
+    );
+  }
+
+  static Uint8List _parseHex(String value) {
+    final String normalized = value.startsWith('0x')
+        ? value.substring(2)
+        : value;
+    if (normalized.isEmpty) {
+      return Uint8List(0);
+    }
+
+    final List<int> bytes = [];
+    for (int i = 0; i < normalized.length - 1; i += 2) {
+      final int byte =
+          int.tryParse(normalized.substring(i, i + 2), radix: 16) ?? 0;
+      bytes.add(byte);
+    }
+    return Uint8List.fromList(bytes);
+  }
 }

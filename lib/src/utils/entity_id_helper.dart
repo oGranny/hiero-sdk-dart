@@ -65,44 +65,44 @@ String generateChecksum(Uint8List ledgerId, String address) {
   return letters.reversed.join();
 }
 
-void validateChecksum(
-  int shard,
-  int realm,
-  int num,
-  String? checksum,
-  Client client,
-) {
-  if (checksum == null) return;
+// void validateChecksum(
+//   int shard,
+//   int realm,
+//   int num,
+//   String? checksum,
+//   Client client,
+// ) {
+//   if (checksum == null) return;
 
-  Uint8List ledgerId = client.network.ledgerId;
-  if (ledgerId.isEmpty) {
-    throw ArgumentError('Ledger ID is required for checksum validation');
-  }
+//   Uint8List ledgerId = client.network.ledgerId;
+//   if (ledgerId.isEmpty) {
+//     throw ArgumentError('Ledger ID is required for checksum validation');
+//   }
 
-  String address = formatToString(shard, realm, num);
-  String expectedChecksum = generateChecksum(ledgerId, address);
-  if (checksum != expectedChecksum) {
-    throw ArgumentError(
-      'Checksum mismatch: expected $expectedChecksum, got $checksum',
-    );
-  }
-}
+//   String address = formatToString(shard, realm, num);
+//   String expectedChecksum = generateChecksum(ledgerId, address);
+//   if (checksum != expectedChecksum) {
+//     throw ArgumentError(
+//       'Checksum mismatch: expected $expectedChecksum, got $checksum',
+//     );
+//   }
+// }
 
 String formatToString(int shard, int realm, int num) {
   return '$shard.$realm.$num';
 }
 
-String formatToStringWithChecksum(
-  int shard,
-  int realm,
-  int num,
-  Client client,
-) {
-  Uint8List ledgerId = client.network.ledgerId;
-  if (ledgerId.isEmpty) {
-    throw ArgumentError('Ledger ID is required for checksum generation');
-  }
-  String baseString = formatToString(shard, realm, num);
-  String checksum = generateChecksum(ledgerId, baseString);
-  return '$baseString-$checksum';
-}
+// String formatToStringWithChecksum(
+//   int shard,
+//   int realm,
+//   int num,
+//   Client client,
+// ) {
+//   Uint8List ledgerId = client.network.ledgerId;
+//   if (ledgerId.isEmpty) {
+//     throw ArgumentError('Ledger ID is required for checksum generation');
+//   }
+//   String baseString = formatToString(shard, realm, num);
+//   String checksum = generateChecksum(ledgerId, baseString);
+//   return '$baseString-$checksum';
+// }

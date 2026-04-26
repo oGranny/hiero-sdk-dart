@@ -74,8 +74,19 @@ class Network {
   Duration nodeMinReadmitPeriod = Duration(seconds: 8);
   Duration nodeMaxReadmitPeriod = Duration(seconds: 3600);
   late DateTime earliestReadmitPeriod;
-  late int nodeIndex;
+  int nodeIndex = 0;
   late Node currentNode;
+
+  Network._forAsync({
+    required this.network,
+    required this.mirrorAddress,
+    required this.ledgerId,
+    required this.nodes,
+  }) {
+    transportSecurity = hostedNetworks.contains(this.network);
+    verifyCertificates = true;
+    earliestReadmitPeriod = DateTime.now().add(nodeMinReadmitPeriod);
+  }
 
   Network({
     String? network,
@@ -89,20 +100,55 @@ class Network {
        nodes = nodes ?? [] {
     transportSecurity = hostedNetworks.contains(this.network);
     verifyCertificates = true;
-    // await _setNetworkNodes(nodes);
-    setNetworkNodes(nodes); // TODO: check with await
     earliestReadmitPeriod = DateTime.now().add(nodeMinReadmitPeriod);
+
+    final List<Node> initialNodes = resolveNodesSync(nodes);
+    applyResolvedNodes(initialNodes);
+    initializeCurrentNode();
+  }
+
+  static Future<Network> create({
+    String? network,
+    String? mirrorAddress,
+    Uint8List? ledgerId,
+    List<Node>? nodes,
+  }) async {
+    final Network instance = Network._forAsync(
+      network: network ?? 'testnet',
+      mirrorAddress: mirrorAddress ?? mirrorAddressDefault[network ?? 'solo']!,
+      ledgerId: ledgerId ?? ledgerIds[network ?? 'solo']!,
+      nodes: nodes ?? [],
+    );
+
+    await instance.setNetworkNodes(nodes);
+    instance.initializeCurrentNode();
+    return instance;
+  }
+
+  List<Node> resolveNodesSync(List<Node>? nodes) {
+    if (nodes != null && nodes.isNotEmpty) {
+      return nodes;
+    }
+    if (defaultNodes.containsKey(network) ||
+        ["solo", "localhost", "local"].contains(network)) {
+      return fetchNodesFromDefaultNodes();
+    }
+
+    throw ArgumentError(
+      'No default nodes available for network $network. '
+      'Use Network.create() to allow async node resolution.',
+    );
+  }
+
+  void initializeCurrentNode() {
     if (healthyNodes.isEmpty) {
-      throw ArgumentError(
-        'No healthy nodes available for network $this.network',
-      );
+      throw ArgumentError('No healthy nodes available for network $network');
     }
     nodeIndex = Random.secure().nextInt(healthyNodes.length);
     currentNode = healthyNodes[nodeIndex];
   }
 
-  Future<void> setNetworkNodes(List<Node>? nodes) async {
-    List<Node> finalNodes = await resolveNodes(nodes);
+  void applyResolvedNodes(List<Node> finalNodes) {
     for (Node node in finalNodes) {
       node.applyTransportSecurity(transportSecurity);
       node.setVerifyCertificates(verifyCertificates);
@@ -115,19 +161,36 @@ class Network {
       if (!node.isHealthy()) continue;
       healthyNodes.add(node);
     }
+
+    if (healthyNodes.isEmpty) {
+      throw ArgumentError('No healthy nodes available for network $network');
+    }
+  }
+
+  Future<void> setNetworkNodes(List<Node>? nodes) async {
+    List<Node> finalNodes = await resolveNodes(nodes);
+    applyResolvedNodes(finalNodes);
+
+    if (healthyNodes.isNotEmpty) {
+      currentNode = healthyNodes[nodeIndex % healthyNodes.length];
+    }
   }
 
   Future<List<Node>> resolveNodes(List<Node>? nodes) async {
     if (nodes != null && nodes.isNotEmpty) {
       return nodes;
     }
-    if (defaultNodes.containsKey(network) ||
-        ["solo", "localhost", "local"].contains(network)) {
+    if (["solo", "localhost", "local"].contains(network)) {
+      print("local");
       return fetchNodesFromDefaultNodes();
     }
     List<Node> fetched = await fetchNodesFromMirrorNode();
     if (fetched.isNotEmpty) {
       return fetched;
+    }
+
+    if (defaultNodes.containsKey(network)) {
+      return fetchNodesFromDefaultNodes();
     }
 
     throw ArgumentError('No nodes available for network $network');
@@ -149,17 +212,42 @@ class Network {
         final data = jsonDecode(response.body);
         final List<Node> nodes = [];
         for (var node in (data['nodes'] ?? [])) {
-          NodeAddress addressBook = NodeAddress.fromDict(node);
-          AccountId accountId = addressBook.accountId!;
-          String address = addressBook.addresses.first.toString();
+          try {
+            if (node is! Map<String, dynamic>) {
+              continue;
+            }
+            NodeAddress addressBook = NodeAddress.fromJson(node);
+            if (addressBook.addresses.isEmpty) {
+              continue;
+            }
 
-          nodes.add(
-            Node(
-              address: ManagedNodeAddress.fromString(address),
-              accountId: accountId,
-              addressBook: addressBook,
-            ),
-          );
+            final endpoint = addressBook.addresses.first;
+            final String decodedAddress = utf8.decode(
+              endpoint.getAddress(),
+              allowMalformed: true,
+            );
+            final String host = endpoint.getDomainName().isNotEmpty
+                ? endpoint.getDomainName()
+                : decodedAddress;
+            if (host.isEmpty) {
+              continue;
+            }
+
+            AccountId accountId = addressBook.accountId!;
+            final String address = '$host:${endpoint.getPort()}';
+
+            nodes.add(
+              Node(
+                address: ManagedNodeAddress.fromString(address),
+                accountId: accountId,
+                addressBook: addressBook,
+              ),
+            );
+          } catch (e) {
+            print('Skipping invalid mirror node entry: $e');
+            print('Node data: ${jsonEncode(node)}');
+            continue;
+          }
         }
         return nodes;
       } else {
@@ -170,7 +258,8 @@ class Network {
       }
     } catch (e) {
       print('Unexpected error fetching nodes: $e');
-      return [];
+      // return [];
+      throw ArgumentError('Failed to fetch nodes from mirror node: $e');
     }
   }
 
