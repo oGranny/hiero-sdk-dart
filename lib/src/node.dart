@@ -58,10 +58,10 @@ class HederaTrustManager {
     Uint8List cerHashBytes = Uint8List.fromList(cerHash.bytes);
     String actualHash = hex.encode(cerHashBytes).toLowerCase();
 
-    if (actualHash != hex.encode(certHash as List<int>).toLowerCase()) {
+    if (actualHash != utf8.decode(certHash!)) {
       throw ArgumentError(
         "Failed to confirm the server's certificate from a known address book. "
-        "Expected hash: ${hex.encode(certHash as List<int>).toLowerCase()}, received hash: $actualHash",
+        "Expected hash: ${utf8.decode(certHash!)}, received hash: $actualHash",
       );
     }
     return true;
