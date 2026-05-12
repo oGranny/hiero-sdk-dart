@@ -146,4 +146,32 @@ class PublicKey extends Key {
   String toString() {
     return 'PublicKey(${isEd25519 ? 'Ed 25519' : 'Unknown'})';
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! PublicKey) return false;
+    if (isEd25519 && other.isEd25519) {
+      final bytes1 = (_publicKey as SimplePublicKey).bytes;
+      final bytes2 = (other._publicKey as SimplePublicKey).bytes;
+      if (bytes1.length != bytes2.length) return false;
+      for (int i = 0; i < bytes1.length; i++) {
+        if (bytes1[i] != bytes2[i]) return false;
+      }
+      return true;
+    }
+    return false;
+  }
+
+  @override
+  int get hashCode {
+    if (isEd25519) {
+      int result = 17;
+      for (final byte in (_publicKey as SimplePublicKey).bytes) {
+        result = 31 * result + byte;
+      }
+      return result;
+    }
+    return _publicKey.hashCode;
+  }
 }

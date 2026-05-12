@@ -16,20 +16,14 @@ class AccountId {
   final int _shard;
   final int _realm;
   final int _num;
-  PublicKey? _aliasKey;
+  PublicKey? aliasKey;
   String? _checksum;
 
-  AccountId({
-    int? shard,
-    int? realm,
-    int? num,
-    PublicKey? aliasKey,
-    String? checksum,
-  }) : _shard = shard ?? 0,
-       _realm = realm ?? 0,
-       _num = num ?? 0,
-       _aliasKey = aliasKey,
-       _checksum = checksum;
+  AccountId({int? shard, int? realm, int? num, this.aliasKey, String? checksum})
+    : _shard = shard ?? 0,
+      _realm = realm ?? 0,
+      _num = num ?? 0,
+      _checksum = checksum;
 
   factory AccountId.fromString(String accountIdStr) {
     try {
@@ -82,7 +76,7 @@ class AccountId {
     if (alias.isNotEmpty) {
       final keyProto = basic_types.Key()..mergeFromBuffer(alias);
       if (keyProto.ed25519.isNotEmpty) {
-        res._aliasKey = PublicKey.fromProto(keyProto);
+        res.aliasKey = PublicKey.fromProto(keyProto);
       }
     }
     return res;
@@ -94,8 +88,8 @@ class AccountId {
       realmNum: fixnum.Int64(_realm),
       accountNum: fixnum.Int64(_num),
     );
-    if (_aliasKey != null) {
-      Uint8List key = _aliasKey!.toProto().writeToBuffer();
+    if (aliasKey != null) {
+      Uint8List key = aliasKey!.toProto().writeToBuffer();
       accountIdProto.alias = key;
     }
     return accountIdProto;
@@ -110,7 +104,7 @@ class AccountId {
 
   @override
   String toString() {
-    if (_aliasKey != null) return '$_shard.$_realm.${_aliasKey.toString()}';
+    if (aliasKey != null) return '$_shard.$_realm.${aliasKey.toString()}';
     return '$_shard.$_realm.$_num';
   }
 
@@ -121,11 +115,11 @@ class AccountId {
     return _shard == other._shard &&
         _realm == other._realm &&
         _num == other._num &&
-        _aliasKey == other._aliasKey;
+        aliasKey == other.aliasKey;
   }
 
   @override
-  int get hashCode => Object.hash(_shard, _realm, _num, _aliasKey);
+  int get hashCode => Object.hash(_shard, _realm, _num, aliasKey);
 
   void validateChecksum(Client client) {
     if (_checksum == null) {
