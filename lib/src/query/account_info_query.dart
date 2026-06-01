@@ -33,6 +33,9 @@ class AccountInfoQuery extends Query {
 
   @override
   Future<query_pb.Query> makeRequest() async {
+    if (accountId == null) {
+      throw StateError("Account ID must be set before making the request.");
+    }
     try {
       var queryHeader = await makeRequestHeader();
       var cryptoGetInfoQuery = crypto_get_info_pb.CryptoGetInfoQuery()
@@ -47,6 +50,9 @@ class AccountInfoQuery extends Query {
   }
 
   Future<AccountInfo> execute(Client client, {num? timeout}) async {
+    if (accountId == null) {
+      throw StateError("Account ID must be set before making the request.");
+    }
     await beforeExecute(client);
     final response = await execute_(client, timeout?.toDouble() ?? 120.0);
     final infoResponse = (response as response_pb.Response).cryptoGetInfo;
