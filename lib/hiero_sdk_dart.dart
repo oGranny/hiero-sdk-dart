@@ -9,6 +9,7 @@ export 'src/client/client.dart';
 
 // Accounts
 export 'src/account/account_id.dart';
+export 'src/account/account_info.dart';
 export 'src/account/account_create_transaction.dart';
 
 // Transactions
@@ -18,6 +19,7 @@ export 'src/transaction/transaction_receipt.dart';
 export 'src/transaction/transaction.dart' show Transaction;
 
 // Queries
+export 'src/query/account_info_query.dart';
 export 'src/query/transaction_get_receipt_query.dart';
 
 // Crypto
@@ -28,5 +30,7 @@ export 'src/crypto/key.dart';
 // Utilities
 export 'src/hbar.dart';
 export 'src/hbar_unit.dart';
+export 'src/timestamp.dart';
+export 'src/duration.dart';
 export 'src/response_code.dart';
 export 'src/exceptions.dart';

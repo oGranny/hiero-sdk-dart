@@ -46,7 +46,7 @@ abstract class Transaction extends Executable {
   Key? batchKey;
 
   @override
-  Object makeRequest() {
+  Future<Object> makeRequest() async {
     return toProto();
   }
 

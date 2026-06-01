@@ -102,7 +102,7 @@ abstract class Query extends Executable {
       ),
       basic_types.AccountAmount(
         accountID: payerAccountId.toProto(),
-        amount: Int64(amount.toTinybars()),
+        amount: Int64(-amount.toTinybars()),
       ),
     ];
 
@@ -130,7 +130,7 @@ abstract class Query extends Executable {
       );
     } else {
       //TODO
-      throw UnimplementedError("ECDSA not supported yes");
+      throw UnimplementedError("ECDSA not supported yet");
     }
 
     basic_types.SignatureMap signsignatureMap = basic_types.SignatureMap(
@@ -163,7 +163,7 @@ abstract class Query extends Executable {
 
     final resp = await execute_(client, 120);
     final dynamic queryResponse = getQueryResponse(resp);
-    return Hbar.fromTinybars(queryResponse.header.cost);
+    return Hbar.fromTinybars(queryResponse.header.cost.toInt());
   }
 
   bool isPaymentRequired() {
@@ -174,7 +174,7 @@ abstract class Query extends Executable {
   Method getMethod(Channel channel);
 
   @override
-  query_pb.Query makeRequest();
+  Future<query_pb.Query> makeRequest();
 
   @override
   Object mapResponse(Object response, Object nodeId, Object protoRequest) {

@@ -129,7 +129,7 @@ abstract class Executable {
 
   Exception mapStatusError(Object response);
 
-  Object makeRequest();
+  Future<Object> makeRequest();
 
   Method getMethod(Channel channel);
 
@@ -235,7 +235,7 @@ abstract class Executable {
       );
 
       final Method method = getMethod(channel);
-      final protoRequest = makeRequest();
+      final protoRequest = await makeRequest();
 
       if (!node.isHealthy()) {
         await handleUnhealthyNode(protoRequest, attempt, errorPersistant);

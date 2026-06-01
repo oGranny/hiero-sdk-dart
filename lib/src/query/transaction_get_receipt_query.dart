@@ -62,7 +62,7 @@ class TransactionGetReceiptQuery extends Query {
   }
 
   @override
-  query_pb.Query makeRequest() {
+  Future<query_pb.Query> makeRequest() async {
     if (transactionId == null) {
       throw StateError("Transaction ID must be set before making the request.");
     }
